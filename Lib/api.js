@@ -8,7 +8,7 @@ export const addOrder = async (order) => {
       body: JSON.stringify(order),
     });
   };
-  // Returns true if a given public key has purchased an item before
+  // Returns true if a given public key has purchased an item before 
 export const hasPurchased = async (publicKey, itemID) => {
   // Send a GET request with the public key as a parameter
   const response = await fetch(`../api/orders?buyer=${publicKey.toString()}`);
