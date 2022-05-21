@@ -1,5 +1,5 @@
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
-import { clusterApiUrl, Connection, PublicKey, Transaction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, PublicKey, Transaction , SystemProgram, LAMPORTS_PER_SOL} from "@solana/web3.js";
 import { createTransferCheckedInstruction, getAssociatedTokenAddress, getMint } from "@solana/spl-token";
 import BigNumber from "bignumber.js";
 import products from "./products.json";
@@ -38,12 +38,12 @@ const createTransaction = async (req, res) => {
     const endpoint = clusterApiUrl(network);
     const connection = new Connection(endpoint);
 
-    const buyerUsdcAddress = await getAssociatedTokenAddress(usdcAddress, buyerPublicKey);
-    const shopUsdcAddress = await getAssociatedTokenAddress(usdcAddress, sellerPublicKey);
+    // const buyerUsdcAddress = await getAssociatedTokenAddress(usdcAddress, buyerPublicKey);
+    // const shopUsdcAddress = await getAssociatedTokenAddress(usdcAddress, sellerPublicKey);
     const { blockhash } = await connection.getLatestBlockhash("finalized");
     
     // This is new, we're getting the mint address of the token we want to transfer
-    const usdcMint = await getMint(connection, usdcAddress);
+    // const usdcMint = await getMint(connection, usdcAddress);
     
     const tx = new Transaction({
       recentBlockhash: blockhash,
@@ -51,14 +51,20 @@ const createTransaction = async (req, res) => {
     });
     
     // Here we're creating a different type of transfer instruction
-    const transferInstruction = createTransferCheckedInstruction(
-      buyerUsdcAddress, 
-      usdcAddress,     // This is the address of the token we want to transfer
-      shopUsdcAddress, 
-      buyerPublicKey, 
-      bigAmount.toNumber() * 10 ** (await usdcMint).decimals, 
-      usdcMint.decimals // The token could have any number of decimals
-    );
+    // const transferInstruction = createTransferCheckedInstruction(
+    //   buyerUsdcAddress, 
+    //   usdcAddress,     // This is the address of the token we want to transfer
+    //   shopUsdcAddress, 
+    //   buyerPublicKey, 
+    //   bigAmount.toNumber() * 10 ** (await usdcMint).decimals, 
+    //   usdcMint.decimals // The token could have any number of decimals
+    // );
+    const transferInstruction = SystemProgram.transfer({
+        fromPubkey: buyerPublicKey,
+        // Lamports are the smallest unit of SOL, like Gwei with Ethereum
+        lamports: bigAmount.multipliedBy(LAMPORTS_PER_SOL).toNumber(), 
+        toPubkey: sellerPublicKey,
+      });
 
     // The rest remains the same :)
     transferInstruction.keys.push({
